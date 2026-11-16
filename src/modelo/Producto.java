@@ -116,4 +116,9 @@ public class Producto {
     public String getTipo() {
         return "General";
     }
+
+    // Solo los perecederos tienen fecha de vencimiento; los demas devuelven texto vacio.
+    public String getFechaVencimientoTexto() {
+        return "";
+    }
 }

@@ -59,6 +59,11 @@ public class ProductoPerecedero extends Producto {
     }
 
     @Override
+    public String getFechaVencimientoTexto() {
+        return fechaVencimiento.toString();
+    }
+
+    @Override
     public String getTipo() {
         return "Perecedero";
     }

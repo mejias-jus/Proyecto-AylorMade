@@ -14,6 +14,7 @@ public class Cajero extends Usuario {
         setNumeroCaja(numeroCaja);
     }
 
+    @Override
     public int getNumeroCaja() {
         return numeroCaja;
     }

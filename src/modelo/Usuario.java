@@ -82,4 +82,9 @@ public class Usuario {
     public boolean puedeAnularVentas() {
         return false;
     }
+
+    // Solo los cajeros tienen caja; los demas devuelven 0.
+    public int getNumeroCaja() {
+        return 0;
+    }
 }
