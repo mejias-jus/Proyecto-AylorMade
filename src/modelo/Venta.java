@@ -13,12 +13,12 @@ public class Venta {
 
     private int numero;
     private String fecha;
-    private Cajero cajero;
+    private Usuario cajero;
     private ArrayList<ItemVenta> items;
     private MetodoPago metodoPago;
     private boolean cerrada;
 
-    public Venta(int numero, Cajero cajero) {
+    public Venta(int numero, Usuario cajero) {
         this.numero = numero;
         this.cajero = cajero;
         this.fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -35,7 +35,7 @@ public class Venta {
         return fecha;
     }
 
-    public Cajero getCajero() {
+    public Usuario getCajero() {
         return cajero;
     }
 
@@ -82,6 +82,19 @@ public class Venta {
         return true;
     }
 
+    public boolean quitarProducto(String codigo) {
+        if (cerrada || codigo == null) {
+            return false;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getProducto().getCodigo().equals(codigo)) {
+                items.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public double calcularTotal() {
         double total = 0;
         for (int i = 0; i < items.size(); i++) {
@@ -125,7 +138,11 @@ public class Venta {
         StringBuilder sb = new StringBuilder();
         sb.append("========== FACTURA N. ").append(numero).append(" ==========\n");
         sb.append("Fecha: ").append(fecha).append("\n");
-        sb.append("Cajero: ").append(cajero.getNombre()).append(" (Caja ").append(cajero.getNumeroCaja()).append(")\n");
+        sb.append("Atendio: ").append(cajero.getNombre());
+        if (cajero.getNumeroCaja() > 0) {
+            sb.append(" (Caja ").append(cajero.getNumeroCaja()).append(")");
+        }
+        sb.append("\n");
         sb.append("--------------------------------------\n");
         for (int i = 0; i < items.size(); i++) {
             ItemVenta item = items.get(i);

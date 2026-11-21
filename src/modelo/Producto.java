@@ -117,6 +117,19 @@ public class Producto {
         return "General";
     }
 
+    // Los productos no perecederos nunca vencen; ProductoPerecedero sobrescribe estos metodos.
+    public boolean estaVencido() {
+        return false;
+    }
+
+    public boolean estaPorVencer() {
+        return false;
+    }
+
+    public void setFechaVencimiento(java.time.LocalDate fechaVencimiento) {
+        // no hace nada: solo los perecederos tienen fecha de vencimiento
+    }
+
     // Solo los perecederos tienen fecha de vencimiento; los demas devuelven texto vacio.
     public String getFechaVencimientoTexto() {
         return "";

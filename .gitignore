@@ -1,0 +1,12 @@
+# Credenciales del correo (NUNCA subir)
+config/correo.txt
+
+# Datos del negocio y de las pruebas
+datos/
+datos_prueba*/
+
+# NetBeans / compilacion
+build/
+dist/
+nbproject/private/
+out/

@@ -26,6 +26,11 @@ public class Administrador extends Usuario {
     }
 
     @Override
+    public boolean puedeGestionarUsuarios() {
+        return true;
+    }
+
+    @Override
     public boolean puedeAnularVentas() {
         return true;
     }

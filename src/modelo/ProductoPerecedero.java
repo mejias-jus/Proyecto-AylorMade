@@ -25,6 +25,7 @@ public class ProductoPerecedero extends Producto {
         return fechaVencimiento;
     }
 
+    @Override
     public void setFechaVencimiento(LocalDate fechaVencimiento) {
         if (fechaVencimiento != null) {
             this.fechaVencimiento = fechaVencimiento;
@@ -35,10 +36,12 @@ public class ProductoPerecedero extends Producto {
         return (int) ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
     }
 
+    @Override
     public boolean estaVencido() {
         return diasParaVencer() < 0;
     }
 
+    @Override
     public boolean estaPorVencer() {
         int dias = diasParaVencer();
         return dias >= 0 && dias <= DIAS_ALERTA;

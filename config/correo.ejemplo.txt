@@ -1,0 +1,8 @@
+# Configuración del correo de AylorMade (sirve para enviar facturas y recuperar contraseñas).
+# 1. Copie este archivo con el nombre correo.txt (en la misma carpeta config).
+# 2. Complete usuario y clave. NUNCA suba correo.txt a Git.
+# Para Gmail: use una "contraseña de aplicación" (requiere verificación en dos pasos), no la contraseña normal.
+servidor=smtp.gmail.com
+puerto=587
+usuario=
+clave=

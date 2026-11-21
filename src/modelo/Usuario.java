@@ -83,6 +83,10 @@ public class Usuario {
         return false;
     }
 
+    public boolean puedeGestionarUsuarios() {
+        return false;
+    }
+
     // Solo los cajeros tienen caja; los demas devuelven 0.
     public int getNumeroCaja() {
         return 0;
