@@ -1,5 +1,0 @@
-Copyright (c) 2026 AylorMade Todos los derechos reservados.
-Este código fuente y todos los archivos asociados en este repositorio son propiedad exclusiva de AylorMade. 
-Este repositorio es público únicamente con fines de visualización, lectura y revisión académica o profesional.
-Queda estrictamente prohibida la copia, descarga para uso personal o comercial, modificación, distribución, sublicencia o reutilización 
-total o parcial de este software sin la autorización previa, expresa y por escrito de los autores.
