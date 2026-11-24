@@ -1,6 +1,8 @@
 package datos;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +32,11 @@ public class ArchivoTexto {
         return ruta;
     }
 
+    // Cantidad de lineas con datos que tiene el archivo (sin contar vacias ni comentarios).
+    public int contarLineas() {
+        return leerLineas().size();
+    }
+
     // Quita el separador y los saltos de linea para que un dato no dane el formato del archivo.
     protected String limpiar(String texto) {
         if (texto == null) {
@@ -51,16 +58,41 @@ public class ArchivoTexto {
             return lineas;
         }
         try {
-            List<String> leidas = Files.readAllLines(path, StandardCharsets.UTF_8);
+            List<String> leidas = leerConCodificacion(path);
             for (int i = 0; i < leidas.size(); i++) {
-                if (!leidas.get(i).trim().isEmpty()) {
-                    lineas.add(leidas.get(i));
+                String linea = leidas.get(i);
+                // Algunos editores agregan una marca invisible (BOM) al inicio del archivo: se quita.
+                if (i == 0 && linea.startsWith("\uFEFF")) {
+                    linea = linea.substring(1);
+                }
+                // se ignoran las lineas vacias y los comentarios (lineas que empiezan con #)
+                if (!linea.trim().isEmpty() && !linea.trim().startsWith("#")) {
+                    lineas.add(linea);
                 }
             }
         } catch (IOException e) {
             System.out.println("Error leyendo " + ruta + ": " + e.getMessage());
         }
         return lineas;
+    }
+
+    // Lee en UTF-8; si el archivo fue guardado en otra codificacion (por ejemplo ANSI en el Bloc de notas),
+    // lo vuelve a leer como Windows-1252 para no perder los datos.
+    private List<String> leerConCodificacion(Path path) throws IOException {
+        try {
+            return Files.readAllLines(path, StandardCharsets.UTF_8);
+        } catch (CharacterCodingException e) {
+            return Files.readAllLines(path, Charset.forName("windows-1252"));
+        }
+    }
+
+    public boolean existe() {
+        return Files.exists(Paths.get(ruta));
+    }
+
+    // Ruta completa del archivo (sirve para mostrar en los mensajes de error).
+    public String getRutaCompleta() {
+        return Paths.get(ruta).toAbsolutePath().toString();
     }
 
     /**

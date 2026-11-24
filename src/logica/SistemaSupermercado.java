@@ -3,6 +3,7 @@ package logica;
 import datos.ArchivoConfiguracion;
 import datos.ArchivoEntradas;
 import datos.ArchivoProductos;
+import datos.ArchivoSucursales;
 import datos.ArchivoUsuarios;
 import datos.ArchivoVentas;
 
@@ -18,6 +19,7 @@ public class SistemaSupermercado {
     private ServicioProductos productos;
     private ServicioVentas ventas;
     private ServicioReportes reportes;
+    private ServicioSucursales sucursales;
 
     public SistemaSupermercado() {
         this("datos");
@@ -34,12 +36,14 @@ public class SistemaSupermercado {
         ArchivoProductos archivoProductos = new ArchivoProductos(carpeta + "/productos.txt");
         ArchivoVentas archivoVentas = new ArchivoVentas(carpeta + "/ventas.txt");
         ArchivoEntradas archivoEntradas = new ArchivoEntradas(carpeta + "/entradas.txt");
+        ArchivoSucursales archivoSucursales = new ArchivoSucursales(carpeta + "/sucursales.txt");
 
         this.correo = correo;
         this.usuarios = new ServicioUsuarios(archivoUsuarios, correo);
         this.productos = new ServicioProductos(archivoProductos, archivoEntradas);
-        this.ventas = new ServicioVentas(archivoVentas, productos);
+        this.ventas = new ServicioVentas(archivoVentas, productos, correo);
         this.reportes = new ServicioReportes(archivoVentas, archivoEntradas);
+        this.sucursales = new ServicioSucursales(archivoSucursales);
     }
 
     public ServicioCorreo getCorreo() {
@@ -56,6 +60,10 @@ public class SistemaSupermercado {
 
     public ServicioVentas getVentas() {
         return ventas;
+    }
+
+    public ServicioSucursales getSucursales() {
+        return sucursales;
     }
 
     public ServicioReportes getReportes() {

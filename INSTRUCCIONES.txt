@@ -23,15 +23,22 @@ CÓMO PROBAR EL SISTEMA (paso a paso)
    En "Caja de cobro" se escribe el código del producto (por ejemplo 100001) o se escanea,
    y se presiona Enter. Luego se elige el método de pago y se presiona COBRAR.
    Los productos de ejemplo 100009 (vencido) y 100014 (stock bajo) sirven para ver las reglas y alertas.
-5. Para probar el correo (factura y recuperar contraseña): copie
+5. "Mapa y reportes" (menú lateral): la pestaña Reportes muestra lo recaudado, las ventas, los
+   productos vendidos, el total por cajero y las entradas de mercadería de cualquier día.
+   La pestaña "Mapa de sucursales" muestra las sucursales en un mapa de OpenStreetMap; el
+   administrador agrega una sucursal haciendo clic en el mapa y completando el nombre y la dirección.
+6. Para probar el correo (factura y recuperar contraseña): copie
    config/correo.ejemplo.txt como config/correo.txt y complete usuario y clave.
    Si ya viene configurado con la cuenta del proyecto, no hace falta hacer nada.
+   En la caja de cobro, si se escribe el "Correo del cliente" antes de COBRAR, se le envía la
+   factura. Si el correo falla, la venta queda registrada de todos modos.
 
 ARCHIVOS .TXT (carpeta datos, se crea sola)
 - usuarios.txt: usuarios (la contraseña se guarda como hash, nunca en texto).
 - productos.txt: inventario.
 - ventas.txt: cada venta cobrada.
 - entradas.txt: ingresos de mercadería al inventario.
+- sucursales.txt: sucursales que se muestran en el mapa.
 
 ESTRUCTURA POR CAPAS (paquetes)
 - modelo: clases del negocio (herencia y polimorfismo).

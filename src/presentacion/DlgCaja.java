@@ -77,6 +77,7 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
     private JComboBox<String> cmbMetodo = new JComboBox<>(new String[]{"Efectivo", "Tarjeta", "SINPE Móvil"});
     private JLabel lblPago = Estilo.etiqueta("MONTO RECIBIDO (₡)");
     private JTextField txtPago = new JTextField(12);
+    private JTextField txtCorreoCliente = new JTextField(12);
     private JButton btnCobrar = Estilo.boton("COBRAR", Estilo.VERDE);
 
     public DlgCaja(Frame padre, SistemaSupermercado sistema, Usuario usuario) {
@@ -218,6 +219,8 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 38));
         lblTotal.setForeground(Estilo.VERDE);
         Estilo.estilizarCampo(txtPago);
+        Estilo.estilizarCampo(txtCorreoCliente);
+        txtCorreoCliente.setToolTipText("Si lo escribe, la factura se envía a este correo");
         txtPago.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnCobrar.setFont(new Font("Segoe UI", Font.BOLD, 20));
         btnCobrar.setBorder(new EmptyBorder(16, 18, 16, 18));
@@ -229,7 +232,10 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         Estilo.agregar(col, cmbMetodo, 6);
         Estilo.agregar(col, lblPago, 16);
         Estilo.agregar(col, txtPago, 6);
-        Estilo.agregar(col, btnCobrar, 26);
+        Estilo.agregar(col, Estilo.etiqueta("CORREO DEL CLIENTE (OPCIONAL)"), 16);
+        Estilo.agregar(col, txtCorreoCliente, 6);
+        Estilo.agregar(col, Estilo.etiqueta("Se le envía la factura a este correo."), 4);
+        Estilo.agregar(col, btnCobrar, 22);
         col.add(Box.createVerticalGlue());
         return col;
     }
@@ -241,6 +247,7 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         lblVenta.setText("Venta N.º " + venta.getNumero());
         txtCodigo.setText("");
         txtPago.setText("");
+        txtCorreoCliente.setText("");
         spnCantidad.setValue(1);
         lblMensaje.setText(" ");
         mostrarCarrito();
@@ -372,10 +379,31 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
             Estilo.mensajeError(lblMensaje, "Escriba el monto recibido como número.");
             return;
         }
+        String errorCorreo = sistema.getVentas().validarCorreoCliente(txtCorreoCliente.getText());
+        if (!errorCorreo.isEmpty()) {
+            Estilo.mensajeError(lblMensaje, errorCorreo);
+            return;
+        }
         String error = sistema.getVentas().cobrar(venta, metodo);
         if (venta.estaCerrada()) {
-            // La venta se cobro: se muestra la factura (aunque haya habido un aviso al guardar).
-            mostrarFactura();
+            // La venta se cobro y ya quedo guardada. Despues se intenta enviar la factura por correo.
+            String estadoCorreo = "";
+            boolean correoEnviado = true;
+            String correoCliente = txtCorreoCliente.getText().trim();
+            if (!correoCliente.isEmpty()) {
+                Estilo.mensajeExito(lblMensaje, "Enviando la factura...");
+                lblMensaje.paintImmediately(lblMensaje.getBounds());
+                setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
+                String errorEnvio = sistema.getVentas().enviarFactura(venta, correoCliente);
+                setCursor(java.awt.Cursor.getDefaultCursor());
+                if (errorEnvio.isEmpty()) {
+                    estadoCorreo = "Factura enviada a " + correoCliente + ".";
+                } else {
+                    correoEnviado = false;
+                    estadoCorreo = "La venta quedó registrada, pero no se pudo enviar la factura. " + errorEnvio;
+                }
+            }
+            mostrarFactura(estadoCorreo, correoEnviado);
             if (!error.isEmpty()) {
                 JOptionPane.showMessageDialog(this, error, "Aviso", JOptionPane.WARNING_MESSAGE);
             }
@@ -386,13 +414,25 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         }
     }
 
-    private void mostrarFactura() {
+    private void mostrarFactura(String estadoCorreo, boolean correoEnviado) {
         JTextArea area = new JTextArea(venta.generarFactura());
         area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         area.setEditable(false);
         area.setBorder(new EmptyBorder(8, 8, 8, 8));
         JScrollPane scroll = new JScrollPane(area);
-        scroll.setPreferredSize(new Dimension(430, 340));
-        JOptionPane.showMessageDialog(this, scroll, "Venta cobrada", JOptionPane.INFORMATION_MESSAGE);
+        scroll.setPreferredSize(new Dimension(430, 320));
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.add(scroll, BorderLayout.CENTER);
+        if (!estadoCorreo.isEmpty()) {
+            JLabel lblEstado = new JLabel("<html><body style='width:400px'>" + estadoCorreo + "</body></html>");
+            lblEstado.setFont(Estilo.NEGRITA);
+            if (correoEnviado) {
+                lblEstado.setForeground(Estilo.VERDE);
+            } else {
+                lblEstado.setForeground(Estilo.ROJO);
+            }
+            panel.add(lblEstado, BorderLayout.SOUTH);
+        }
+        JOptionPane.showMessageDialog(this, panel, "Venta cobrada", JOptionPane.INFORMATION_MESSAGE);
     }
 }

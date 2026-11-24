@@ -51,6 +51,16 @@ public class ArchivoProductos extends ArchivoTexto {
                 + p.getFechaVencimientoTexto();
     }
 
+    // Acepta una fecha normal (2026-12-31) o una relativa: +3 es dentro de 3 dias, -1 es ayer.
+    // Las fechas relativas sirven para archivos de ejemplo; al guardar siempre queda la fecha real.
+    private LocalDate leerFecha(String texto) {
+        String t = texto.trim();
+        if (t.startsWith("+") || t.startsWith("-")) {
+            return LocalDate.now().plusDays(Integer.parseInt(t.substring(1)) * (t.startsWith("-") ? -1 : 1));
+        }
+        return LocalDate.parse(t);
+    }
+
     // Devuelve null si la linea no es valida.
     private Producto convertirLinea(String linea) {
         String[] p = separar(linea);
@@ -65,7 +75,7 @@ public class ArchivoProductos extends ArchivoTexto {
             if (p[0].equals("General")) {
                 producto = new Producto(p[1], p[2], precio, stock, stockMinimo);
             } else if (p[0].equals("Perecedero")) {
-                producto = new ProductoPerecedero(p[1], p[2], precio, stock, stockMinimo, LocalDate.parse(p[6]));
+                producto = new ProductoPerecedero(p[1], p[2], precio, stock, stockMinimo, leerFecha(p[6]));
             } else if (p[0].equals("Canasta basica")) {
                 producto = new ProductoCanastaBasica(p[1], p[2], precio, stock, stockMinimo);
             }

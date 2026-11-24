@@ -141,12 +141,12 @@ public class Estilo {
         h.setReorderingAllowed(false);
     }
 
-    // Etiqueta para mostrar mensajes de error o exito: reserva espacio para dos lineas.
+    // Etiqueta para mostrar mensajes de error o exito: reserva espacio para tres lineas.
     public static JLabel mensaje() {
         JLabel l = new JLabel(" ");
         l.setFont(FUENTE);
         l.setVerticalAlignment(SwingConstants.TOP);
-        l.setPreferredSize(new Dimension(10, 40));
+        l.setPreferredSize(new Dimension(10, 58));
         return l;
     }
 

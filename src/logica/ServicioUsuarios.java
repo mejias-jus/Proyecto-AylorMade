@@ -130,7 +130,7 @@ public class ServicioUsuarios {
             return "Escriba su usuario o correo.";
         }
         if (!correo.estaConfigurado()) {
-            return "El envío de correos no está configurado. Contacte al administrador del sistema.";
+            return "El envío de correos no está configurado. " + correo.problemaConfiguracion();
         }
         Usuario u = buscarPorUsuarioOCorreo(usuarioOCorreo);
         if (u == null) {

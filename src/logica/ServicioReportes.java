@@ -101,6 +101,70 @@ public class ServicioReportes {
         return unidades;
     }
 
+    /**
+     * Resumen de lo vendido ese dia por producto, del que mas se vendio al que menos.
+     * Cada fila es {codigo, nombre, unidades, total vendido}.
+     */
+    public ArrayList<String[]> productosVendidos(String fecha, ServicioProductos productos) {
+        ArrayList<String> codigos = new ArrayList<>();
+        ArrayList<Integer> unidades = new ArrayList<>();
+        ArrayList<Double> totales = new ArrayList<>();
+        ArrayList<RegistroVenta> ventas = ventasDelDia(fecha);
+        for (int i = 0; i < ventas.size(); i++) {
+            String[] lineas = ventas.get(i).getItems().split(",");
+            for (int j = 0; j < lineas.length; j++) {
+                String[] partes = lineas[j].split(":");
+                if (partes.length != 3) {
+                    continue;
+                }
+                try {
+                    int cantidad = Integer.parseInt(partes[1]);
+                    double subtotal = cantidad * Double.parseDouble(partes[2]);
+                    int posicion = codigos.indexOf(partes[0]);
+                    if (posicion < 0) {
+                        codigos.add(partes[0]);
+                        unidades.add(cantidad);
+                        totales.add(subtotal);
+                    } else {
+                        unidades.set(posicion, unidades.get(posicion) + cantidad);
+                        totales.set(posicion, totales.get(posicion) + subtotal);
+                    }
+                } catch (NumberFormatException e) {
+                    // detalle danado: se ignora
+                }
+            }
+        }
+        // Se ordena de mayor a menor cantidad vendida (metodo de seleccion).
+        for (int i = 0; i < codigos.size() - 1; i++) {
+            int mayor = i;
+            for (int j = i + 1; j < codigos.size(); j++) {
+                if (unidades.get(j) > unidades.get(mayor)) {
+                    mayor = j;
+                }
+            }
+            if (mayor != i) {
+                String c = codigos.get(i);
+                codigos.set(i, codigos.get(mayor));
+                codigos.set(mayor, c);
+                int u = unidades.get(i);
+                unidades.set(i, unidades.get(mayor));
+                unidades.set(mayor, u);
+                double t = totales.get(i);
+                totales.set(i, totales.get(mayor));
+                totales.set(mayor, t);
+            }
+        }
+        ArrayList<String[]> resultado = new ArrayList<>();
+        for (int i = 0; i < codigos.size(); i++) {
+            String nombre = codigos.get(i);
+            if (productos != null && productos.buscarPorCodigo(codigos.get(i)) != null) {
+                nombre = productos.buscarPorCodigo(codigos.get(i)).getNombre();
+            }
+            resultado.add(new String[]{codigos.get(i), nombre, String.valueOf(unidades.get(i)), String.valueOf(totales.get(i))});
+        }
+        return resultado;
+    }
+
     // Cuantos productos entraron al inventario ese dia.
     public int unidadesIngresadas(String fecha) {
         int unidades = 0;

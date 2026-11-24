@@ -40,6 +40,7 @@ public class FrmPrincipal extends JFrame implements ActionListener {
 
     private JButton btnCaja = botonMenu("Caja de cobro", "ic_caja.png");
     private JButton btnProductos = botonMenu("Productos", "ic_productos.png");
+    private JButton btnMapa = botonMenu("Mapa y reportes", "ic_mapa.png");
     private JButton btnUsuarios = botonMenu("Usuarios", "ic_usuarios.png");
     private JButton btnClave = botonMenu("Mi contraseña", "ic_llave.png");
     private JButton btnSalir = botonMenu("Cerrar sesión", "ic_salir.png");
@@ -73,6 +74,7 @@ public class FrmPrincipal extends JFrame implements ActionListener {
 
         btnCaja.addActionListener(this);
         btnProductos.addActionListener(this);
+        btnMapa.addActionListener(this);
         btnUsuarios.addActionListener(this);
         btnClave.addActionListener(this);
         btnSalir.addActionListener(this);
@@ -116,6 +118,7 @@ public class FrmPrincipal extends JFrame implements ActionListener {
 
         p.add(btnCaja);
         p.add(btnProductos);
+        p.add(btnMapa);
         if (usuario.puedeGestionarUsuarios()) {
             p.add(btnUsuarios);
         }
@@ -314,6 +317,9 @@ public class FrmPrincipal extends JFrame implements ActionListener {
             actualizar();
         } else if (origen == btnProductos) {
             new DlgProductos(this, sistema, usuario).setVisible(true);
+            actualizar();
+        } else if (origen == btnMapa) {
+            new DlgMapaReportes(this, sistema, usuario).setVisible(true);
             actualizar();
         } else if (origen == btnUsuarios) {
             new DlgUsuarios(this, sistema, usuario).setVisible(true);

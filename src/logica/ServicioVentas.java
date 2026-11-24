@@ -16,10 +16,12 @@ public class ServicioVentas {
 
     private ArchivoVentas archivoVentas;
     private ServicioProductos servicioProductos;
+    private ServicioCorreo correo;
 
-    public ServicioVentas(ArchivoVentas archivoVentas, ServicioProductos servicioProductos) {
+    public ServicioVentas(ArchivoVentas archivoVentas, ServicioProductos servicioProductos, ServicioCorreo correo) {
         this.archivoVentas = archivoVentas;
         this.servicioProductos = servicioProductos;
+        this.correo = correo;
     }
 
     public Venta iniciarVenta(Usuario vendedor) {
@@ -58,6 +60,34 @@ public class ServicioVentas {
             return "El producto no está en el carrito.";
         }
         return "";
+    }
+
+    // El correo del cliente es opcional: "" es valido. Si se escribe, debe tener forma de correo.
+    public String validarCorreoCliente(String correoCliente) {
+        if (correoCliente == null || correoCliente.trim().isEmpty()) {
+            return "";
+        }
+        String c = correoCliente.trim();
+        if (!c.contains("@") || !c.contains(".") || c.contains(" ")) {
+            return "El correo del cliente no es válido.";
+        }
+        return "";
+    }
+
+    /**
+     * Envia la factura de una venta ya cobrada al correo del cliente (por Gmail, con Jakarta Mail).
+     * Si falla, la venta NO se pierde: ya quedo guardada antes de intentar enviar el correo.
+     */
+    public String enviarFactura(Venta venta, String correoCliente) {
+        if (venta == null || !venta.estaCerrada()) {
+            return "La venta todavía no se ha cobrado.";
+        }
+        String error = validarCorreoCliente(correoCliente);
+        if (!error.isEmpty()) {
+            return error;
+        }
+        String mensaje = "Gracias por su compra en AylorMade.\n\n" + venta.generarFactura() + "\nVuelva pronto.";
+        return correo.enviar(correoCliente.trim(), "AylorMade - Factura N. " + venta.getNumero(), mensaje);
     }
 
     public String cobrar(Venta venta, MetodoPago metodo) {

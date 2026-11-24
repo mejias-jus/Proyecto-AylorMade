@@ -23,15 +23,34 @@ public class ServicioCorreo {
 
     // Verdadero si el archivo de configuracion tiene servidor, puerto, usuario y clave.
     public boolean estaConfigurado() {
-        return !configuracion.obtener("servidor").isEmpty()
-                && !configuracion.obtener("puerto").isEmpty()
-                && !configuracion.obtener("usuario").isEmpty()
-                && !configuracion.obtener("clave").isEmpty();
+        return problemaConfiguracion().isEmpty();
+    }
+
+    // Explica que falta en la configuracion ("" si todo esta bien). Sirve para que el mensaje diga la causa exacta.
+    public String problemaConfiguracion() {
+        if (!configuracion.existe()) {
+            return "No se encontró el archivo " + configuracion.getRutaCompleta()
+                    + " (revise que se llame correo.txt y no correo.txt.txt).";
+        }
+        String[] campos = {"servidor", "puerto", "usuario", "clave"};
+        String faltan = "";
+        for (int i = 0; i < campos.length; i++) {
+            if (configuracion.obtener(campos[i]).isEmpty()) {
+                if (!faltan.isEmpty()) {
+                    faltan = faltan + ", ";
+                }
+                faltan = faltan + campos[i];
+            }
+        }
+        if (faltan.isEmpty()) {
+            return "";
+        }
+        return "En " + configuracion.getRutaCompleta() + " falta completar: " + faltan + ".";
     }
 
     public String enviar(String destinatario, String asunto, String mensaje) {
         if (!estaConfigurado()) {
-            return "El envío de correos no está configurado (falta completar config/correo.txt).";
+            return "El envío de correos no está configurado. " + problemaConfiguracion();
         }
         if (destinatario == null || !destinatario.contains("@")) {
             return "El correo del destinatario no es válido.";
@@ -65,8 +84,10 @@ public class ServicioCorreo {
             transporte.connect(servidor, usuario, clave);
             transporte.sendMessage(correo, correo.getAllRecipients());
             return "";
-        } catch (Exception e) {
-            return "No se pudo enviar el correo. Revise la conexión a internet y la configuración. (" + e.getMessage() + ")";
+        } catch (Exception | NoClassDefFoundError e) {
+            // Se incluye el tipo de error porque indica la causa (contraseña, internet, falta un .jar...).
+            return "No se pudo enviar el correo. Revise la conexión a internet y la configuración. ("
+                    + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
         } finally {
             if (transporte != null) {
                 try {
