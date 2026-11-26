@@ -2,6 +2,11 @@ package logica;
 
 import datos.ArchivoConfiguracion;
 import jakarta.mail.Message;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
+import java.io.File;
+import java.nio.file.Files;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
@@ -49,6 +54,15 @@ public class ServicioCorreo {
     }
 
     public String enviar(String destinatario, String asunto, String mensaje) {
+        return enviarMensaje(destinatario, asunto, mensaje, null);
+    }
+
+    // Igual que enviar, pero con un archivo adjunto (por ejemplo la factura en PDF).
+    public String enviarConAdjunto(String destinatario, String asunto, String mensaje, File adjunto) {
+        return enviarMensaje(destinatario, asunto, mensaje, adjunto);
+    }
+
+    private String enviarMensaje(String destinatario, String asunto, String mensaje, File adjunto) {
         if (!estaConfigurado()) {
             return "El envío de correos no está configurado. " + problemaConfiguracion();
         }
@@ -74,20 +88,13 @@ public class ServicioCorreo {
         Transport transporte = null;
         try {
             Session sesion = Session.getInstance(propiedades);
-            MimeMessage correo = new MimeMessage(sesion);
-            correo.setFrom(new InternetAddress(usuario, "AylorMade"));
-            correo.setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario));
-            correo.setSubject(asunto, "UTF-8");
-            correo.setText(mensaje, "UTF-8");
-
+            MimeMessage correo = construirMensaje(sesion, usuario, destinatario, asunto, mensaje, adjunto);
             transporte = sesion.getTransport("smtp");
             transporte.connect(servidor, usuario, clave);
             transporte.sendMessage(correo, correo.getAllRecipients());
             return "";
-        } catch (Exception | NoClassDefFoundError e) {
-            // Se incluye el tipo de error porque indica la causa (contraseña, internet, falta un .jar...).
-            return "No se pudo enviar el correo. Revise la conexión a internet y la configuración. ("
-                    + e.getClass().getSimpleName() + ": " + e.getMessage() + ")";
+        } catch (Exception e) {
+            return "No se pudo enviar el correo. Revise la conexión a internet y la configuración. (" + e.getMessage() + ")";
         } finally {
             if (transporte != null) {
                 try {
@@ -97,5 +104,32 @@ public class ServicioCorreo {
                 }
             }
         }
+    }
+
+    /**
+     * Arma el correo: el texto y, si se indica, un archivo adjunto (un PDF). No lo envia.
+     * Un correo con adjunto es "multipart": una parte con el texto y otra con el archivo.
+     */
+    public MimeMessage construirMensaje(Session sesion, String remitente, String destinatario, String asunto,
+            String texto, File adjunto) throws Exception {
+        MimeMessage correo = new MimeMessage(sesion);
+        correo.setFrom(new InternetAddress(remitente, "AylorMade"));
+        correo.setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario));
+        correo.setSubject(asunto, "UTF-8");
+        if (adjunto == null) {
+            correo.setText(texto, "UTF-8");
+            return correo;
+        }
+        MimeBodyPart parteTexto = new MimeBodyPart();
+        parteTexto.setText(texto, "UTF-8");
+        MimeBodyPart parteArchivo = new MimeBodyPart();
+        parteArchivo.setDataHandler(new jakarta.activation.DataHandler(
+                new ByteArrayDataSource(Files.readAllBytes(adjunto.toPath()), "application/pdf")));
+        parteArchivo.setFileName(adjunto.getName());
+        MimeMultipart partes = new MimeMultipart();
+        partes.addBodyPart(parteTexto);
+        partes.addBodyPart(parteArchivo);
+        correo.setContent(partes);
+        return correo;
     }
 }

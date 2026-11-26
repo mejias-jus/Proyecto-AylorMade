@@ -41,7 +41,7 @@ public class SistemaSupermercado {
         this.correo = correo;
         this.usuarios = new ServicioUsuarios(archivoUsuarios, correo);
         this.productos = new ServicioProductos(archivoProductos, archivoEntradas);
-        this.ventas = new ServicioVentas(archivoVentas, productos, correo);
+        this.ventas = new ServicioVentas(archivoVentas, productos, correo, new ServicioFactura(carpeta + "/facturas"));
         this.reportes = new ServicioReportes(archivoVentas, archivoEntradas);
         this.sucursales = new ServicioSucursales(archivoSucursales);
     }

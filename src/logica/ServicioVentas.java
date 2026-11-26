@@ -1,6 +1,7 @@
 package logica;
 
 import datos.ArchivoVentas;
+import java.io.File;
 import modelo.MetodoPago;
 import modelo.Producto;
 import modelo.Usuario;
@@ -17,11 +18,14 @@ public class ServicioVentas {
     private ArchivoVentas archivoVentas;
     private ServicioProductos servicioProductos;
     private ServicioCorreo correo;
+    private ServicioFactura servicioFactura;
 
-    public ServicioVentas(ArchivoVentas archivoVentas, ServicioProductos servicioProductos, ServicioCorreo correo) {
+    public ServicioVentas(ArchivoVentas archivoVentas, ServicioProductos servicioProductos,
+            ServicioCorreo correo, ServicioFactura servicioFactura) {
         this.archivoVentas = archivoVentas;
         this.servicioProductos = servicioProductos;
         this.correo = correo;
+        this.servicioFactura = servicioFactura;
     }
 
     public Venta iniciarVenta(Usuario vendedor) {
@@ -74,8 +78,13 @@ public class ServicioVentas {
         return "";
     }
 
+    // Crea el PDF de la factura (con logo y codigo QR) y lo guarda. Devuelve el archivo, o null si no se pudo.
+    public File generarPdf(Venta venta) {
+        return servicioFactura.guardarPdf(venta);
+    }
+
     /**
-     * Envia la factura de una venta ya cobrada al correo del cliente (por Gmail, con Jakarta Mail).
+     * Envia la factura en PDF de una venta ya cobrada al correo del cliente (por Gmail, con Jakarta Mail).
      * Si falla, la venta NO se pierde: ya quedo guardada antes de intentar enviar el correo.
      */
     public String enviarFactura(Venta venta, String correoCliente) {
@@ -86,8 +95,16 @@ public class ServicioVentas {
         if (!error.isEmpty()) {
             return error;
         }
-        String mensaje = "Gracias por su compra en AylorMade.\n\n" + venta.generarFactura() + "\nVuelva pronto.";
-        return correo.enviar(correoCliente.trim(), "AylorMade - Factura N. " + venta.getNumero(), mensaje);
+        File pdf = servicioFactura.guardarPdf(venta);
+        if (pdf == null) {
+            return "No se pudo crear el PDF de la factura.";
+        }
+        String mensaje = "Hola,\n\n"
+                + "Gracias por su compra en AylorMade.\n"
+                + "Adjuntamos su factura N. " + venta.getNumero() + " en formato PDF.\n"
+                + "Total pagado: " + String.format(java.util.Locale.US, "%,.2f", venta.calcularTotal()) + " colones.\n\n"
+                + "Vuelva pronto.";
+        return correo.enviarConAdjunto(correoCliente.trim(), "AylorMade - Factura N." + venta.getNumero(), mensaje, pdf);
     }
 
     public String cobrar(Venta venta, MetodoPago metodo) {

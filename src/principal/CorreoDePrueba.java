@@ -1,6 +1,7 @@
 package principal;
 
 import datos.ArchivoConfiguracion;
+import java.io.File;
 import logica.ServicioCorreo;
 
 /**
@@ -11,6 +12,7 @@ public class CorreoDePrueba extends ServicioCorreo {
 
     private String ultimoDestinatario = "";
     private String ultimoMensaje = "";
+    private String ultimoAdjunto = "";
 
     public CorreoDePrueba() {
         super(new ArchivoConfiguracion("datos_prueba4/no_existe.txt"));
@@ -22,6 +24,16 @@ public class CorreoDePrueba extends ServicioCorreo {
 
     public String getUltimoMensaje() {
         return ultimoMensaje;
+    }
+
+    public String getUltimoAdjunto() {
+        return ultimoAdjunto;
+    }
+
+    @Override
+    public String enviarConAdjunto(String destinatario, String asunto, String mensaje, File adjunto) {
+        ultimoAdjunto = adjunto.getName() + " (" + adjunto.length() + " bytes)";
+        return enviar(destinatario, asunto, mensaje);
     }
 
     @Override

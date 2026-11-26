@@ -12,6 +12,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -387,23 +388,24 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         String error = sistema.getVentas().cobrar(venta, metodo);
         if (venta.estaCerrada()) {
             // La venta se cobro y ya quedo guardada. Despues se intenta enviar la factura por correo.
+            File pdf = sistema.getVentas().generarPdf(venta);
             String estadoCorreo = "";
             boolean correoEnviado = true;
             String correoCliente = txtCorreoCliente.getText().trim();
             if (!correoCliente.isEmpty()) {
-                Estilo.mensajeExito(lblMensaje, "Enviando la factura...");
+                Estilo.mensajeExito(lblMensaje, "Enviando la factura en PDF...");
                 lblMensaje.paintImmediately(lblMensaje.getBounds());
                 setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
                 String errorEnvio = sistema.getVentas().enviarFactura(venta, correoCliente);
                 setCursor(java.awt.Cursor.getDefaultCursor());
                 if (errorEnvio.isEmpty()) {
-                    estadoCorreo = "Factura enviada a " + correoCliente + ".";
+                    estadoCorreo = "Factura en PDF enviada a " + correoCliente + ".";
                 } else {
                     correoEnviado = false;
                     estadoCorreo = "La venta quedó registrada, pero no se pudo enviar la factura. " + errorEnvio;
                 }
             }
-            mostrarFactura(estadoCorreo, correoEnviado);
+            mostrarFactura(estadoCorreo, correoEnviado, pdf);
             if (!error.isEmpty()) {
                 JOptionPane.showMessageDialog(this, error, "Aviso", JOptionPane.WARNING_MESSAGE);
             }
@@ -414,15 +416,23 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
         }
     }
 
-    private void mostrarFactura(String estadoCorreo, boolean correoEnviado) {
+    // Muestra el resumen de la venta cobrada. Si se creo el PDF, ofrece abrirlo.
+    private void mostrarFactura(String estadoCorreo, boolean correoEnviado, File pdf) {
         JTextArea area = new JTextArea(venta.generarFactura());
         area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         area.setEditable(false);
         area.setBorder(new EmptyBorder(8, 8, 8, 8));
         JScrollPane scroll = new JScrollPane(area);
-        scroll.setPreferredSize(new Dimension(430, 320));
+        scroll.setPreferredSize(new Dimension(430, 300));
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.add(scroll, BorderLayout.CENTER);
+
+        JPanel avisos = new JPanel(new GridLayout(0, 1, 0, 4));
+        if (pdf != null) {
+            JLabel lblPdf = new JLabel("<html><body style='width:400px'>Factura en PDF guardada en: " + pdf.getPath() + "</body></html>");
+            lblPdf.setForeground(Estilo.GRIS);
+            avisos.add(lblPdf);
+        }
         if (!estadoCorreo.isEmpty()) {
             JLabel lblEstado = new JLabel("<html><body style='width:400px'>" + estadoCorreo + "</body></html>");
             lblEstado.setFont(Estilo.NEGRITA);
@@ -431,8 +441,28 @@ public class DlgCaja extends JDialog implements ActionListener, ListSelectionLis
             } else {
                 lblEstado.setForeground(Estilo.ROJO);
             }
-            panel.add(lblEstado, BorderLayout.SOUTH);
+            avisos.add(lblEstado);
         }
-        JOptionPane.showMessageDialog(this, panel, "Venta cobrada", JOptionPane.INFORMATION_MESSAGE);
+        panel.add(avisos, BorderLayout.SOUTH);
+
+        Object[] opciones = {"Cerrar"};
+        if (pdf != null) {
+            opciones = new Object[]{"Abrir PDF", "Cerrar"};
+        }
+        int elegida = JOptionPane.showOptionDialog(this, panel, "Venta cobrada", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[opciones.length - 1]);
+        if (pdf != null && elegida == 0) {
+            abrirPdf(pdf);
+        }
+    }
+
+    // Abre el PDF con el programa que tenga el computador (el lector de PDF o el navegador).
+    private void abrirPdf(File pdf) {
+        try {
+            java.awt.Desktop.getDesktop().open(pdf);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "No se pudo abrir el PDF automáticamente.\nSe encuentra en: "
+                    + pdf.getAbsolutePath(), "AylorMade", JOptionPane.WARNING_MESSAGE);
+        }
     }
 }
